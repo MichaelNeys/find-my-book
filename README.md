@@ -4,8 +4,8 @@
 
 The system is deliberately generic: `rack`, `item` and `level` cover a warehouse shelving unit, a museum display case or a hospital wing just as well. The library is the demonstration.
 
-> Individual project, Bachelor of Computer Science, Hasselt University (UHasselt).
-> Supervisor: Prof. dr. Bart Moelans
+> Individual project, Bachelor of Computer Science, Hasselt University (UHasselt).  
+> Supervisor: Prof. dr. Bart Moelans  
 > co-supervisor: dr. Juno Steegmans.
 
 ## Status
