@@ -123,7 +123,7 @@ Besides the development environment there will be a multi-stage production image
 
 ## Continuous integration
 
-GitHub Actions (`.github/workflows/ci.yml`) runs on every push to and pull request against `main`. It runs directly on the GitHub runner with caching instead of in the development containers, which is faster; the tool versions are the same.
+GitHub Actions ([`.github/workflows/main.yml`](../.github/workflows/main.yml)) runs on every push to and pull request against `main`. It runs directly on the GitHub runner with caching instead of in the development containers, which is faster; the tool versions are the same.
 
 | Job | Checks |
 | --- | --- |
@@ -134,4 +134,4 @@ Notes:
 
 - `sqlx` checks queries against the schema at compile time, but CI has no database. Run `cargo sqlx prepare` locally after changing a query or migration and commit the `.sqlx/` directory; CI builds with `SQLX_OFFLINE=true`.
 - Once the frontend imports the WebAssembly package, the `frontend` job must build it first (or take it over as an artifact from the `rust` job).
-- The workflow is added in phase 0, together with the Cargo workspace; before that every run would fail.
+- CI must pass before a pull request is merged into `main`.

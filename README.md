@@ -10,7 +10,7 @@ The system is deliberately generic: `rack`, `item` and `level` cover a warehouse
 
 ## Status
 
-**Phase 0: development environment.** The design and implementation plan lives in [`docs/`](docs/). The Cargo workspace, the SvelteKit app and the Docker setup are in place; implementation follows the [phases in the roadmap](docs/roadmap.md).
+**Phase 1: data model and test building.** The design and implementation plan lives in [`docs/`](docs/). Phase 0 is done: the Cargo workspace, the SvelteKit app, the Docker setup and CI (GitHub Actions) are in place. Implementation follows the [phases in the roadmap](docs/roadmap.md).
 
 ## What the system does (goal)
 
