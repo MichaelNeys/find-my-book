@@ -6,9 +6,10 @@ Build the router on test data first, then the editor: that shows early whether t
 
 ### Phase 0: Development environment
 
-- [ ] Cargo workspace with `core`, `routing`, `server`, `wasm`
-- [ ] SvelteKit project with Tailwind
-- [ ] `compose.yaml` and Dockerfiles for backend, frontend and wasm build
+- [x] Cargo workspace with `core`, `routing`, `server`, `wasm`
+- [x] SvelteKit project with Tailwind
+- [x] `compose.yaml` and Dockerfiles for backend, frontend and wasm build
+- [ ] GitHub Actions CI workflow (see [development](development.md#continuous-integration))
 
 *Done when:* `docker compose up` starts an empty API and an empty frontend.
 

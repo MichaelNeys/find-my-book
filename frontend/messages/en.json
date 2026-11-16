@@ -1,0 +1,9 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"app_title": "Find My Book",
+	"app_tagline": "Find any book in the building, step by step.",
+	"api_status_label": "API status",
+	"api_status_checking": "checking…",
+	"api_status_ok": "online (v{version})",
+	"api_status_down": "unreachable"
+}

@@ -1,0 +1,12 @@
+[package]
+name = "fmb-routing"
+description = "A* routing over the building graph, shared by server and PWA"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[lib]
+name = "routing"
+
+[dependencies]
+# Only `fmb-core` is allowed here (no I/O); added in phase 2.

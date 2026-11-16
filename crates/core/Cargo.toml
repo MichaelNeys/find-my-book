@@ -1,0 +1,12 @@
+[package]
+name = "fmb-core"
+description = "Domain types shared by the server, the router and the PWA"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[lib]
+name = "core_types"
+
+[dependencies]
+# serde is added in phase 1 together with the domain types.

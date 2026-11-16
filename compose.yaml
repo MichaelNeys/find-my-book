@@ -1,0 +1,62 @@
+# Development environment. Start everything with: docker compose up --build
+# See docs/development.md for services, volumes and common commands.
+
+x-rust: &rust
+  build:
+    context: ./docker
+    dockerfile: rust.Dockerfile
+    args:
+      UID: ${UID:-1000}
+      GID: ${GID:-1000}
+  image: find-my-book/rust-dev
+
+services:
+  backend:
+    <<: *rust
+    command: cargo watch --why -w crates -w Cargo.toml -x "run --bin server"
+    environment:
+      PORT: 8080
+      RUST_LOG: info,fmb_server=debug
+    volumes:
+      - .:/app
+      # Each Rust service has its own registry: Cargo's download lock does not
+      # work across containers, so a shared registry breaks on parallel builds.
+      - backend-registry:/usr/local/cargo/registry
+      - backend-target:/target
+    ports:
+      - "8080:8080"
+
+  wasm:
+    <<: *rust
+    # Rebuilds frontend/src/lib/wasm whenever the router or its dependencies change.
+    command: >
+      cargo watch -w crates/wasm -w crates/routing -w crates/core
+      -s "wasm-pack build crates/wasm --dev --target web --out-dir ../../frontend/src/lib/wasm"
+    volumes:
+      - .:/app
+      - wasm-registry:/usr/local/cargo/registry
+      - wasm-target:/target
+      - wasm-pack-cache:/home/dev/.cache
+
+  frontend:
+    build:
+      context: ./docker
+      dockerfile: node.Dockerfile
+    image: find-my-book/node-dev
+    environment:
+      API_URL: http://backend:8080
+    volumes:
+      - ./frontend:/app
+      - node-modules:/app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  backend-registry:
+  wasm-registry:
+  backend-target:
+  wasm-target:
+  wasm-pack-cache:
+  node-modules:

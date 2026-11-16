@@ -1,0 +1,20 @@
+[workspace]
+resolver = "3"
+members = ["crates/core", "crates/routing", "crates/server", "crates/wasm"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+# Dependencies shared by several crates. Planned crate graph (added as code
+# needs it): routing -> core; server -> core, routing; wasm -> core, routing.
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+
+[profile.release]
+lto = true
+
+# Small WebAssembly bundle; only affects the wasm crate's release build.
+[profile.release.package.fmb-wasm]
+opt-level = "s"

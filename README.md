@@ -10,7 +10,7 @@ The system is deliberately generic: `rack`, `item` and `level` cover a warehouse
 
 ## Status
 
-**Design phase.** The design and implementation plan lives in [`docs/`](docs/). There is no code yet; implementation follows the [phases in the roadmap](docs/roadmap.md).
+**Phase 0: development environment.** The design and implementation plan lives in [`docs/`](docs/). The Cargo workspace, the SvelteKit app and the Docker setup are in place; implementation follows the [phases in the roadmap](docs/roadmap.md).
 
 ## What the system does (goal)
 
@@ -45,7 +45,7 @@ The rationale for each decision is in [docs/adr/](docs/adr/).
 | Offline | JSON snapshot in IndexedDB; catalogue optionally as SQLite-WASM in OPFS |
 | Development | Docker and Docker Compose |
 
-## Repository layout (planned)
+## Repository layout
 
 ```text
 find-my-book/
@@ -57,7 +57,7 @@ find-my-book/
 │   └── wasm/       # wasm-bindgen layer around routing for the PWA
 ├── frontend/       # SvelteKit app: visitor PWA and admin interface
 ├── fixtures/       # test buildings as JSON (snapshot format)
-├── docker/         # Dockerfiles per service
+├── docker/         # development images: rust.Dockerfile, node.Dockerfile
 ├── docs/           # design, architecture, ADRs, roadmap
 ├── compose.yaml    # development environment
 └── Cargo.toml      # Cargo workspace
@@ -65,14 +65,16 @@ find-my-book/
 
 ## Getting started
 
-Development happens entirely in Docker containers. Once the first code is in place:
+Development happens entirely in Docker containers. The only requirements are Git and Docker with Compose v2:
 
 ```sh
 docker compose up --build
 ```
 
 - Frontend: <http://localhost:5173>
-- API: <http://localhost:8080>
+- API: <http://localhost:8080/api/health>
+
+The first start takes a few minutes while the Rust tooling and dependencies compile.
 
 Services, volumes and common commands are described in [docs/development.md](docs/development.md).
 

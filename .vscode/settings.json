@@ -1,0 +1,9 @@
+{
+	"files.associations": {
+		"*.css": "tailwindcss"
+	},
+	// The frontend lives in a subfolder; ESLint must run from there to find its config.
+	"eslint.workingDirectories": ["frontend"],
+	"[svelte]": { "editor.defaultFormatter": "svelte.svelte-vscode" },
+	"[rust]": { "editor.defaultFormatter": "rust-lang.rust-analyzer" }
+}

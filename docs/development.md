@@ -1,7 +1,5 @@
 # Development
 
-> There is no code yet. This document describes the planned development environment; update it once `compose.yaml` and the Dockerfiles exist.
-
 Development happens entirely in **Docker containers**. The host only needs Git, Docker and Docker Compose; Rust, Node.js and `wasm-pack` run in containers. The environment behaves the same everywhere, and a supervisor or jury can start the project with a single command.
 
 ## Requirements
@@ -9,23 +7,36 @@ Development happens entirely in **Docker containers**. The host only needs Git, 
 - Docker Engine 24+ (or Docker Desktop) with Docker Compose v2
 - Git
 
-## Services (planned)
+## Services
 
 | Service | Base image | Task | Port |
 | --- | --- | --- | --- |
-| `backend` | `rust` | Axum server, restarted automatically on changes (`cargo watch`) | 8080 |
-| `frontend` | `node` | SvelteKit dev server (Vite) with hot reload | 5173 |
-| `wasm` | `rust` + `wasm-pack` | Builds `crates/wasm` into `frontend/src/lib/wasm` when `routing` changes | — |
+| `backend` | [`docker/rust.Dockerfile`](../docker/rust.Dockerfile) (`rust`) | Axum server, rebuilt and restarted on changes (`cargo watch`) | 8080 |
+| `wasm` | [`docker/rust.Dockerfile`](../docker/rust.Dockerfile) (`rust`) | Rebuilds `crates/wasm` with `wasm-pack` into `frontend/src/lib/wasm` when `wasm`, `routing` or `core` changes | — |
+| `frontend` | [`docker/node.Dockerfile`](../docker/node.Dockerfile) (`node`) | SvelteKit dev server (Vite) with hot reload; proxies `/api` to `backend` | 5173 |
 
-SQLite needs no service of its own: the database files live in a volume (`./data` or a named volume) used by the backend.
+`backend` and `wasm` share one image (Rust with `rustfmt`, `clippy`, the `wasm32-unknown-unknown` target, `cargo-watch` and `wasm-pack`). The images contain only tools; the source code is bind-mounted.
+
+SQLite needs no service of its own: the database files will live in `data/` (phase 1), used by the backend.
+
+The first `docker compose up --build` takes a few minutes: the Rust image compiles `cargo-watch` and `wasm-pack`, and the backend compiles all dependencies. After that, the caches in the named volumes make restarts fast.
 
 ### Volumes
 
 - Source code as a bind mount, so changes are visible immediately.
-- Named volumes for `target/` (Cargo build), the Cargo registry and `node_modules`, so builds stay fast and do not clash with the host.
+- Named volumes, separate for `backend` and `wasm`, for the Cargo registry and the build output (`CARGO_TARGET_DIR=/target`, outside the bind mount). They are separate because Cargo's locks do not work across containers, so two containers sharing them break on parallel builds. Also volumes for the `wasm-pack` cache and `node_modules`. Builds stay fast and do not clash with a build on the host.
+- `docker compose down -v` removes these volumes; the next start rebuilds from scratch.
+
+### File ownership
+
+The containers run as a non-root user, so files they write into the bind mount (such as the generated wasm package) belong to you. The Rust image creates that user with UID/GID 1000 by default; if your host user has a different ID, build with `UID=$(id -u) GID=$(id -g) docker compose build`. The Node image uses its built-in `node` user (UID 1000).
 - `data/` for the SQLite files; listed in `.gitignore`.
 
-## Common commands (planned)
+## Crate names
+
+The workspace packages are `fmb-core`, `fmb-routing`, `fmb-server` and `fmb-wasm` (in `crates/`). In code, `fmb-core` is imported as `core_types`, because `core` is the name of Rust's built-in library. Dependencies between the crates are added as code needs them; the allowed direction is `routing -> core`, `server -> core, routing`, `wasm -> core, routing`.
+
+## Common commands
 
 ```sh
 # start everything
@@ -34,10 +45,15 @@ docker compose up --build
 # follow the logs of one service
 docker compose logs -f backend
 
-# run the Rust workspace tests
+# run the Rust workspace checks
 docker compose run --rm backend cargo test --workspace
+docker compose run --rm backend cargo clippy --workspace --all-targets -- -D warnings
+docker compose run --rm backend cargo fmt --all
 
-# run database migrations
+# build the WebAssembly package once (the `wasm` service does this on every change)
+docker compose run --rm wasm wasm-pack build crates/wasm --target web --out-dir ../../frontend/src/lib/wasm
+
+# from phase 1 on: run database migrations
 docker compose run --rm backend sqlx migrate run
 
 # load a test building into the database
@@ -48,9 +64,14 @@ docker compose run --rm backend cargo run --release --bin generate -- \
     --aisles 40 --racks-per-side 20 --floors 4 --items 1000000 \
     > fixtures/generated/warehouse.json
 
-# frontend tests and lint
-docker compose run --rm frontend npm test
+# frontend checks
+docker compose run --rm frontend npm run check
 docker compose run --rm frontend npm run lint
+docker compose run --rm frontend npm test
+docker compose run --rm frontend npm run format   # fix formatting
+
+# add a frontend package (installs into the node_modules volume)
+docker compose run --rm frontend npm install <package>
 
 # stop everything and wipe the database
 docker compose down -v
@@ -92,7 +113,7 @@ Besides the development environment there will be a multi-stage production image
 
 ## Working agreements
 
-- **Branches:** `main` always works. Work on a separate branch per phase or feature and merge through a merge request.
+- **Branches:** `main` always works. Work on a separate branch per phase or feature and merge through a pull request; CI must pass before merging.
 - **Commits:** short, descriptive messages in the imperative mood, e.g. `routing: add wheelchair profile`.
 - **Formatting and linting:** `cargo fmt`, `cargo clippy -- -D warnings`, Prettier and ESLint for the frontend.
 - **Tests:** the router has unit tests on the test building; every router bug first gets a failing test.
@@ -102,4 +123,15 @@ Besides the development environment there will be a multi-stage production image
 
 ## Continuous integration
 
-A pipeline that runs `cargo fmt --check`, `cargo clippy`, `cargo test`, the frontend tests and a `wasm-pack build` on every push, in the same containers as locally.
+GitHub Actions (`.github/workflows/ci.yml`) runs on every push to and pull request against `main`. It runs directly on the GitHub runner with caching instead of in the development containers, which is faster; the tool versions are the same.
+
+| Job | Checks |
+| --- | --- |
+| `rust` | `cargo fmt --all --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace`, `wasm-pack build crates/wasm` |
+| `frontend` | `npm ci`, lint, type check, tests, build |
+
+Notes:
+
+- `sqlx` checks queries against the schema at compile time, but CI has no database. Run `cargo sqlx prepare` locally after changing a query or migration and commit the `.sqlx/` directory; CI builds with `SQLX_OFFLINE=true`.
+- Once the frontend imports the WebAssembly package, the `frontend` job must build it first (or take it over as an artifact from the `rust` job).
+- The workflow is added in phase 0, together with the Cargo workspace; before that every run would fail.
