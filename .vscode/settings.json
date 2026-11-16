@@ -1,4 +1,6 @@
 {
+	// Prettier (and CI) require a final newline; let the editor add it on save.
+	"files.insertFinalNewline": true,
 	"files.associations": {
 		"*.css": "tailwindcss"
 	},
