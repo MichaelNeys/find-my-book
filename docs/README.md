@@ -15,6 +15,7 @@ Also:
 
 - [adr/](adr/): Architecture Decision Records, each with context, decision and consequences.
 - [glossary.md](glossary.md): terms and their name in the schema and code.
+- [ai-usage.md](ai-usage.md): what AI was used for in this project, per phase.
 
 ## Conventions for this documentation
 

@@ -78,6 +78,10 @@ The first start takes a few minutes while the Rust tooling and dependencies comp
 
 Services, volumes and common commands are described in [docs/development.md](docs/development.md).
 
+## Use of AI
+
+This project is developed with the help of an AI assistant ([Claude Code](https://claude.com/claude-code) by Anthropic). The author makes the design decisions and reviews, tests and commits all AI output. What AI was used for is recorded per phase in [docs/ai-usage.md](docs/ai-usage.md).
+
 ## Documentation
 
 | Document | Contents |
@@ -92,3 +96,4 @@ Services, volumes and common commands are described in [docs/development.md](doc
 | [Roadmap](docs/roadmap.md) | Phases, decisions, open questions and risks |
 | [ADRs](docs/adr/) | Architecture decision records |
 | [Glossary](docs/glossary.md) | Terms and their schema names |
+| [Use of AI](docs/ai-usage.md) | What AI was used for, per phase |
